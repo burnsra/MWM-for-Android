@@ -60,6 +60,9 @@ public class WeatherWidget implements InternalWidget {
 	public final static String id_11 = "weather_46_46";
 	final static String desc_11 = "Current Weather (46x46)";
 	
+	public final static String id_12 = "weather_mod_96_32";
+	final static String desc_12 = "Current Weather Mod (96x32)";
+	
 	private Context context = null;
 	private TextPaint paintSmall;
 	private TextPaint paintSmallOutline;
@@ -278,6 +281,20 @@ public class WeatherWidget implements InternalWidget {
 			widget.height = 46;
 			
 			widget.bitmap = draw11();
+			widget.priority = calcPriority();
+			
+			result.put(widget.id, widget);
+		}
+		
+		if(widgetIds == null || widgetIds.contains(id_12)) {
+			InternalWidget.WidgetData widget = new InternalWidget.WidgetData();
+			
+			widget.id = id_12;
+			widget.description = desc_12;
+			widget.width = 96;
+			widget.height = 32;
+			
+			widget.bitmap = draw12();
 			widget.priority = calcPriority();
 			
 			result.put(widget.id, widget);
@@ -807,6 +824,69 @@ public class WeatherWidget implements InternalWidget {
 			}
 			else {
 				canvas.drawText("No data", 23, 25, paintSmall);
+			}
+			paintSmall.setTextAlign(Paint.Align.LEFT);
+		}
+		
+		return bitmap;
+	}
+	
+	private Bitmap draw12() {
+		Bitmap bitmap = Bitmap.createBitmap(96, 32, Bitmap.Config.RGB_565);
+		Canvas canvas = new Canvas(bitmap);
+		canvas.drawColor(Color.WHITE);
+		
+		if (Monitors.weatherData.received) {
+			
+			// icon
+			Bitmap image = Utils.getBitmap(context, Monitors.weatherData.icon);
+			canvas.drawBitmap(image, 4, 0, null);
+
+			// temperatures
+			paintLarge.setTextAlign(Paint.Align.RIGHT);
+			paintLargeOutline.setTextAlign(Paint.Align.RIGHT);
+			Utils.drawOutlinedText(Monitors.weatherData.temp, canvas, 82, 13, paintLarge, paintLargeOutline);
+			if (Monitors.weatherData.celsius) {
+				//RM: since the degree symbol draws wrong...
+				canvas.drawText("O", 79, 7, paintSmall);
+				canvas.drawText("C", 92, 13, paintLarge);
+			}
+			else {
+				//RM: since the degree symbol draws wrong...
+				canvas.drawText("O", 80, 7, paintSmall);
+				canvas.drawText("F", 92, 13, paintLarge);
+			}
+			paintLarge.setTextAlign(Paint.Align.LEFT);
+						
+			if (Monitors.weatherData.forecast!=null && Monitors.weatherData.forecast.length>0) {
+				final String high = Monitors.weatherData.forecast[0].getTempHigh();
+				final String low = Monitors.weatherData.forecast[0].getTempLow();
+				final boolean shortLabel = (high.length()>2 || low.length()>2);
+				canvas.drawText( shortLabel ? "Hi" : "High", 61, 23, paintSmall);
+				canvas.drawText( shortLabel ? "Lo" : "Low", 61, 31, paintSmall);
+				
+				paintSmall.setTextAlign(Paint.Align.RIGHT);
+				canvas.drawText(high, 92, 23, paintSmall);
+				canvas.drawText(low, 92, 31, paintSmall);
+				paintSmall.setTextAlign(Paint.Align.LEFT);
+			}
+
+			// condition
+			//Utils.drawOutlinedText((String) TextUtils.ellipsize(Monitors.weatherData.condition, paintSmall, 63, TruncateAt.END), canvas, 8, 31, paintSmall, paintSmallOutline);
+			paintSmall.setTextAlign(Paint.Align.LEFT);
+			Utils.drawWrappedText(Monitors.weatherData.condition, canvas, 4, 26, 60, paintSmall, Layout.Alignment.ALIGN_NORMAL);
+		} else {
+			paintSmall.setTextAlign(Paint.Align.CENTER);
+			if (Preferences.weatherGeolocationMode != GeolocationMode.MANUAL) {
+				if( !LocationData.received ) {
+					canvas.drawText("Awaiting location", 48, 18, paintSmall);
+				}
+				else {
+					canvas.drawText("Awaiting weather", 48, 18, paintSmall);
+				}
+			}
+			else {
+				canvas.drawText("No data", 48, 18, paintSmall);
 			}
 			paintSmall.setTextAlign(Paint.Align.LEFT);
 		}
